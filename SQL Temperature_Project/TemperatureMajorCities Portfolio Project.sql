@@ -169,5 +169,34 @@ SELECT Country, Year, Month, Day
 FROM TemperatureMajorCities..city_temperature
 ORDER BY Country, CAST(Year AS int), CAST(Month AS int), CAST(Day AS int)
 
-SELECT *
+-- Following the same process, virtually, from the 125 countries, from the period of 1995-2020, if the data record the avg temperature by day, the data len is 14.325.000, however
+-- the dataset has 2.906.237, so in therms of %, we only have aprox the 20,28% of the data.
+
+SELECT Country, Year, Month,AVG(CAST(AvgTemperature AS float)) AS AvgTemperatureMonth
 FROM TemperatureMajorCities..city_temperature
+GROUP BY Country, Year, Month
+ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
+
+CREATE TABLE WithOut99 
+(
+Country nvarchar(50),
+Year numeric,
+Month numeric,
+Day numeric,
+AvgTemperature numeric
+)
+
+--
+
+INSERT INTO WithOut99
+SELECT Country, Year, Month, Day, AvgTemperature 
+FROM TemperatureMajorCities..city_temperature
+WHERE CAST(AvgTemperature AS float) != -99
+ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
+
+--
+
+SELECT Country, Year, Month, AVG(CAST(AvgTemperature AS float)) AS AvgTemepratureMonth
+FROM WithOut99
+GROUP BY Country, Year, Month
+ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
