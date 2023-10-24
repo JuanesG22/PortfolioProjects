@@ -1,202 +1,189 @@
--- Size of the dataset
+/*
+Major cities Average Temperature exploration
 
-SELECT COUNT(Country) 
+Skills used: Temp tables,CTE,Join's, windows Functions, Aggregate functions, Creating views, Converting Data Types
+*/
+
+SELECT *
 FROM TemperatureMajorCities..city_temperature
+ORDER BY 2,6
 
-SELECT * 
-FROM [TemperatureMajorCities].[dbo].[city_temperature]
+-- Exploration of data, looking for empty, null values or missing data. 
+-- Region Column
 
---Looking for missing values
-
-SELECT Region 
+SELECT *
 FROM TemperatureMajorCities..city_temperature
-WHERE Region is Null
+WHERE Region = '' OR Region is Null
 
 --	Country column
 
-SELECT Country 
+SELECT * 
 FROM TemperatureMajorCities..city_temperature
-WHERE Country is Null 
+WHERE Country = '' OR Country is Null 
 
--- There is not null values
+-- State column 
 
-SELECT State FROM TemperatureMajorCities..city_temperature
-WHERE State = ''
+SELECT * 
+FROM TemperatureMajorCities..city_temperature
+WHERE State = '' OR State is Null 
 
--- There is a lot of data (Almost the half) related to the state which is empty but we dont care about that as we are interest just in Countries and Regions
+SELECT * 
+FROM TemperatureMajorCities..city_temperature
+WHERE State is Null 
+
+-- On State column is empty for all the countries except US 
+
+SELECT * 
+FROM TemperatureMajorCities..city_temperature
+WHERE State != ''
+
+-- City Column
+
+SELECT *
+FROM TemperatureMajorCities..city_temperature
+WHERE City = '' or City is Null
+
+-- Month Column
+
+SELECT * 
+FROM TemperatureMajorCities..city_temperature
+WHERE Month= '' or Month is Null
+
+-- It should be expected that the query above shows 12 rows 
 
 SELECT DISTINCT Month 
 FROM TemperatureMajorCities..city_temperature
 
--- Something about the data is that all columns are varchar, due to this, on the Month column we have values for 02 and 2, which are the same month but formate different, for this
--- we can CAST those columns and this should be solved
+-- From previous queries, the months are typed with numbers, however, the Column type is varchar. Casting the Month column as int:
 
-SELECT DISTINCT CAST(Month AS int) 
+SELECT DISTINCT CAST(Month AS int)  as Month_Number
 FROM TemperatureMajorCities..city_temperature
 ORDER BY CAST(Month AS int) asc
 
--- Looking at Year Column
+-- Casting could be used to the following columns
+-- Year Column
 
-SELECT CAST(Year AS int) , COUNT(Year)
+SELECT CAST(Year AS int) , COUNT(Year) as YearApperance
 FROM TemperatureMajorCities..city_temperature
 GROUP BY CAST(Year AS int)
 ORDER BY CAST(Year AS int) asc
  
- --
+-- Query above shows 200 and 201 years. Let's see all the data related to these values:
 
-SELECT CAST(Year AS int) , COUNT(Year)
-FROM TemperatureMajorCities..city_temperature
-WHERE CAST(Year AS int) = 200 OR CAST(Year AS int) = 201
-GROUP BY CAST(Year AS int)
--- We have then some values from 201 and 200, we have 440 records whit 200 and 201, let's see what AVGTemperature value they have
-
-SELECT Year,Month,Day, AvgTemperature
+SELECT *
 FROM TemperatureMajorCities..city_temperature
 WHERE CAST(Year AS int) = 200 OR CAST(Year AS int) = 201
 
--- As we can see, all these records are missing values from those days
+-- Data related to this years values shows an AvgTemperature of -99, which appearance of be the indicator of missing values
+-- Day Column
 
 SELECT Day 
 FROM TemperatureMajorCities..city_temperature
-WHERE Day is Null
+WHERE Day is Null or Day = ''
 
---
+--  It should be expected that the query above shows 31 rows 
 
-SELECT DISTINCT CAST(Day AS int) 
+SELECT DISTINCT CAST(Day AS int) as Day_Numbers
 FROM TemperatureMajorCities..city_temperature
 ORDER BY CAST(Day AS int) asc
 
--- Query above shows that there is a Day 0 in the data, which may be wrong cause there is no 0 day in calendar. So lets look at those values
+-- Query above shows that there is a Day 0 in the data, which may be wrong cause there is no 0 day in calendar. So lets look at this value
 
 SELECT * 
 FROM TemperatureMajorCities..city_temperature
 WHERE CAST(Day AS int) = 0
 
--- As we can see, the AvgTemperature registred that Day is -99, which means that this values might be missing. So lets look if there is more AvgTemperature values equals to -99
+-- Same thing that before, the Select above shows missing values
 
-SELECT COUNT(Region) 
+--  Select the count of AvgTemperature values equals to -99
+
+SELECT *
 FROM TemperatureMajorCities..city_temperature
 WHERE CAST(AvgTemperature AS float) = -99
 
 -- So there is 79672 of 2906327 with -99 of AvgTemperature, the 2.7% of the dataset are missing values
 
+-- Select the total cities
 
-
-SELECT Country,	CAST(Year AS int) , COUNT(DISTINCT Month) as mes
+SELECT Region,Country,State, City
 FROM TemperatureMajorCities..city_temperature
-GROUP BY Country, CAST(Year AS int)
-
-
-SELECT Country, YEAR, COUNT(DISTINCT Month) as No_meses 
-FROM TemperatureMajorCities..city_temperature 
-group by Country, Year
-
--- lets look how many countries are
-
-SELECT COUNT(DISTINCT Country)
-FROM TemperatureMajorCities..city_temperature
-
--- 125 countries. From previous queries, the period in which data was collacted is around 26 years. So, lets se if there is some years related to some countries that are missing from
--- data. So the next query will Select the Countries and years and group it, Considering that the dataset has 125 countries from 26 years, then the among of rows might be 3250, if
--- no data is missing
-
-SELECT Country, Year
-FROM TemperatureMajorCities..city_temperature
-GROUP BY Country, Year
-
--- So the result was 3101 rows, which means that some countries does not have data in their column years (149 rows).
--- Creating a Temp Table to look the countries with missing data on years column.
-
-DROP TABLE IF EXISTS MissingYears
-CREATE TABLE MissingYears
-(
-Country nvarchar(50),
-No_Years numeric
-)
-
-INSERT INTO MissingYears
-SELECT Country, COUNT(DISTINCT Year) as No_Years
-FROM TemperatureMajorCities..city_temperature
-GROUP BY Country 
-
-SELECT Country, No_Years
-FROM MissingYears
-WHERE No_Years != 26
-
--- So, in case of populate the data that is missing, this could be the first step.
-
--- Now we repeat the same process with the months and days. For months, without missing values the result should be 39000
-SELECT Country, Year, Month
-FROM TemperatureMajorCities..city_temperature
-GROUP BY Country, Year, Month
-ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
-
--- Query give us 36288, The diference with the virtual result give us 2712 rows missing, which 1788 came from the 149 rows related to the years missing. In this order,
--- we have 924 rows which has year but do not have month. 
-
-SELECT Country,Year, COUNT(DISTINCT CAST(Month as int))
-FROM TemperatureMajorCities..city_temperature
-GROUP BY Country, Year
-ORDER BY Country, CAST(Year AS int)
-
--- Creating a Temp Table to look the countries with missing data on month column.
-
-DROP TABLE IF EXISTS MissingMonths
-CREATE TABLE MissingMonths
-(
-Country nvarchar(50),
-Year numeric,
-No_months numeric
-)
-
-INSERT INTO MissingMonths
-SELECT Country,Year, COUNT(DISTINCT CAST(Month as int))
-FROM TemperatureMajorCities..city_temperature
-GROUP BY Country, Year
-ORDER BY Country, CAST(Year AS int)
-
-SELECT Country, Year, No_months
-FROM MissingMonths
-WHERE No_months!=12
+GROUP BY Region,Country,State, City
 ORDER BY 1,2
 
--- In case of populate, the query above shows the number of months that the Country in that year has, (i.e if No_Months = 5, there's missing 7 months, which means 7 rows of missing
--- Data
+/*
+There is 325 different cities. We already know that the collection period of the data is between 1995-2020 (26 years). In this order, if the collection has been done by every year
+the lenght of the data should be 8450. Following through, by month 101400, by day 37011000 rows of data. However, the dataset has 2906327 (considering the -99 missing values)
+records, 7,85% if we consider all the data that should be recorder. 
 
--- Now the same process for the Days
+So next, the idea is to select those cities that has all the records for every year, calculate the average temperature for each year and insert it into a view.
+*/
 
-SELECT Country, Year, Month, Day
-FROM TemperatureMajorCities..city_temperature
-ORDER BY Country, CAST(Year AS int), CAST(Month AS int), CAST(Day AS int)
+-- Using Temp Tables to obtain the data without -99 AvgTemperature values
 
--- Following the same process, virtually, from the 125 countries, from the period of 1995-2020, if the data record the avg temperature by day, the data len is 14.325.000, however
--- the dataset has 2.906.237, so in therms of %, we only have aprox the 20,28% of the data.
-
-SELECT Country, Year, Month,AVG(CAST(AvgTemperature AS float)) AS AvgTemperatureMonth
-FROM TemperatureMajorCities..city_temperature
-GROUP BY Country, Year, Month
-ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
-
+DROP TABLE IF EXISTS WithOut99
 CREATE TABLE WithOut99 
 (
+Region nvarchar(50),
 Country nvarchar(50),
-Year numeric,
-Month numeric,
-Day numeric,
-AvgTemperature numeric
+State nvarchar(50),
+City nvarchar(50),
+Year int,
+Month int,
+Day int,
+AvgTemperature float
 )
-
 --
-
 INSERT INTO WithOut99
-SELECT Country, Year, Month, Day, AvgTemperature 
+SELECT Region,Country,State,City, Year, Month, Day, AvgTemperature 
 FROM TemperatureMajorCities..city_temperature
 WHERE CAST(AvgTemperature AS float) != -99
 ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
 
---
-
-SELECT Country, Year, Month, AVG(CAST(AvgTemperature AS float)) AS AvgTemepratureMonth
+SELECT *
 FROM WithOut99
-GROUP BY Country, Year, Month
-ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
+ORDER BY 2,5,6,7
+
+--	Using a Temp Table to Select the countries with full years and months data
+
+DROP TABLE IF EXISTS FullCountries
+CREATE TABLE FullCountries
+(
+Region nvarchar(50),
+Country nvarchar(50),
+State nvarchar(50),
+City nvarchar(50),
+NumberofYears int,
+NumberofMonths int
+) 
+INSERT INTO FullCountries
+SELECT Region, Country, State, City, COUNT(DISTINCT Year) AS NumberofYears, COUNT(DISTINCT Month) AS NumberOfMonths
+FROM WithOut99
+GROUP BY Region, Country, State, City
+HAVING COUNT(DISTINCT Year) = 26 AND COUNT(DISTINCT Month) = 12
+ORDER BY 2,3,4
+
+-- Using CTE to perform calculation of AverageTemperature by month in Celcius
+
+WITH AvgByYear AS (
+SELECT a.Region, a.Country, a.State, a.City,a.Year,a.Month, AVG(a.AvgTemperature) AS AverageTemperaturebyMonth
+FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City  
+GROUP BY a.Region, a.Country, a.State, a.City,a.Year,a.Month
+
+)
+
+
+SELECT *, ((AverageTemperaturebyMonth-32)*5)/9 AS AverageTemperaturebyMonthCelsius
+FROM AvgByYear
+
+-- Creatint View to store data for later visualizations 
+
+--CREATE VIEW AvgTemperatureByMonth AS 
+--WITH
+--		AvgByYear 
+--		AS (
+--						SELECT a.Region, a.Country, a.State, a.City,a.Year,a.Month, AVG(a.AvgTemperature) AS AverageTemperaturebyMonth
+--						FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City  
+--						GROUP BY a.Region, a.Country, a.State, a.City,a.Year,a.Month)
+
+--SELECT *
+--FROM AvgTemperatureByMonth
