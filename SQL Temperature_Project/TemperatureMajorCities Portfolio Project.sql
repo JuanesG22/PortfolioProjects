@@ -185,3 +185,28 @@ WITH AvgByYear AS (
 )
 SELECT * 
 FROM AvgByYear;
+
+
+-- Using CTE to perform calculation of AverageTemperature by month in Celcius
+
+WITH MinMaxYearByDay AS (
+SELECT a.Region, a.Country, a.State, a.City, a.Month, a.Day, MIN(a.AvgTemperature) AS MinAvgTemperature, MAX(a.AvgTemperature) AS MaxAvgTemperature
+FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City  
+GROUP BY a.Region, a.Country, a.State, a.City, a.Month, a.Day
+
+)
+SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius
+FROM MinMaxYearByDay
+
+-- Creating View to store data for later visualizations 
+
+CREATE VIEW ExportingMinMaxYearByDay AS 
+WITH MinMaxYearByDay AS (
+SELECT a.Region, a.Country, a.State, a.City, a.Month, a.Day, MIN(a.AvgTemperature) AS MinAvgTemperature, MAX(a.AvgTemperature) AS MaxAvgTemperature
+FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City  
+GROUP BY a.Region, a.Country, a.State, a.City, a.Month, a.Day
+
+)
+SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius
+FROM MinMaxYearByDay
+
