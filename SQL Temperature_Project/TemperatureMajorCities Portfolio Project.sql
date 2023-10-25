@@ -141,6 +141,7 @@ ORDER BY Country, CAST(Year AS int), CAST(Month AS int)
 
 SELECT *
 FROM WithOut99
+WHERE City = 'Algiers'
 ORDER BY 2,5,6,7
 
 --	Using a Temp Table to Select the countries with full years and months data
@@ -186,8 +187,7 @@ WITH AvgByYear AS (
 SELECT *, ((AverageTemperaturebyMonth-32)*5)/9 AS AverageTemperaturebyMonthCelsius
 FROM AvgByYear;
 
-
--- Using CTE to perform calculation of AverageTemperature by month in Celcius
+-- Using CTE to perform calculation of the Min and Max AvgTemperature on a calendar year along 1995-2020
 
 WITH MinMaxYearByDay AS (
 SELECT a.Region, a.Country, a.State, a.City, a.Month, a.Day, MIN(a.AvgTemperature) AS MinAvgTemperature, MAX(a.AvgTemperature) AS MaxAvgTemperature
@@ -210,3 +210,21 @@ GROUP BY a.Region, a.Country, a.State, a.City, a.Month, a.Day
 SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius
 FROM MinMaxYearByDay
 
+-- There is something special that I want to mention about the above views. At the beggining of this script, it was show that the dataset has a lot of missing data. The missing 
+-- data is not only related to one specific column, in fact, the columns with missing values for our interest are Year, Month, Day and AvgTemperature. By the other hand, the intention
+-- with the views that were created is to show the avg temperature by month and the min and max avgTemperature by month over the period 1995-2020 on every city. So we created the 
+-- CTE FullCountries that has the cities with all the years and all the months, yet, this isn't true at all, and the query below will explain that. The FullCountries CTE has a column
+-- call it umberOfMonths, because it is not partition by at the time to made the count over the months, if a country has a year with 5 months of data and the other 25 years with 12 
+-- months of data, when the query calculate the avgTemperature it would pass away from the missing data and continue with the calculation. This is the reason why the views are not empty.
+-- The query below calculates the total months that every city has in the period 1995-2020. If, the data from a city is complete at the month column, the sum of months partition by
+-- city will show 78*26 = 2028. (78 because if we sum the month values (1+2+...12 =78). The result in AllMonthsAllYears shows that there is not even a country with all the data 
+-- at the column month.
+
+SELECT Region, Country, State, City, Year,Month, SUM (Month) OVER (PARTITION BY City) AS No_Months,
+CASE 
+WHEN  SUM (Month) OVER (PARTITION BY City) = 2028 THEN 'Ok'
+ELSE 'Missing Data'
+END AS  AllMonthsAllYears
+FROM WithOut99
+GROUP BY Region, Country, State, City, Year, Month
+ORDER BY 2,3,4
