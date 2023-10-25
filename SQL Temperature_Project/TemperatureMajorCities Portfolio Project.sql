@@ -183,7 +183,7 @@ WITH AvgByYear AS (
     RIGHT JOIN FullCountries b ON a.City = b.City  
     GROUP BY a.Region, a.Country, a.State, a.City, a.Year, a.Month
 )
-SELECT * 
+SELECT *, ((AverageTemperaturebyMonth-32)*5)/9 AS AverageTemperaturebyMonthCelsius
 FROM AvgByYear;
 
 
