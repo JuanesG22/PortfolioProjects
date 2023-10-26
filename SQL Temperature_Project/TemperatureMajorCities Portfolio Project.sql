@@ -229,6 +229,8 @@ FROM WithOut99
 GROUP BY Region, Country, State, City, Year, Month
 ORDER BY 2,3,4
 
+-- One last view
+
 CREATE VIEW AvgTemperatureAllYears AS 
 WITH AvgByYear AS (
     SELECT a.Region, a.Country, a.State, a.City, a.Year, a.Month,a.Day, a.AvgTemperature
