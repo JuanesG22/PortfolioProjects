@@ -177,14 +177,14 @@ FROM AvgByYear
 
 -- Creating View to store data for later visualizations 
 
-CREATE VIEW ExportingAvgTemperature AS 
+CREATE VIEW ExportingAvgTemperatureByMonth AS 
 WITH AvgByYear AS (
     SELECT a.Region, a.Country, a.State, a.City, a.Year, a.Month, AVG(a.AvgTemperature) AS AverageTemperaturebyMonth
     FROM WithOut99 a 
     RIGHT JOIN FullCountries b ON a.City = b.City  
     GROUP BY a.Region, a.Country, a.State, a.City, a.Year, a.Month
-)
-SELECT *, ((AverageTemperaturebyMonth-32)*5)/9 AS AverageTemperaturebyMonthCelsius
+) 
+SELECT *, ((AverageTemperaturebyMonth-32)*5)/9 AS AverageTemperaturebyMonthCelsius, CONVERT(DATE,CONCAT(CAST(Year as nvarchar(50)),'-',CAST(Month as nvarchar(50)),'-1')) AS Date
 FROM AvgByYear;
 
 -- Using CTE to perform calculation of the Min and Max AvgTemperature on a calendar year along 1995-2020
@@ -204,10 +204,10 @@ CREATE VIEW ExportingMinMaxYearByDay AS
 WITH MinMaxYearByDay AS (
 SELECT a.Region, a.Country, a.State, a.City, a.Month, a.Day, MIN(a.AvgTemperature) AS MinAvgTemperature, MAX(a.AvgTemperature) AS MaxAvgTemperature
 FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City  
+WHERE a.Day !=29 
 GROUP BY a.Region, a.Country, a.State, a.City, a.Month, a.Day
-
 )
-SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius
+SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius, CONVERT(DATE,CONCAT('2021-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date
 FROM MinMaxYearByDay
 
 -- There is something special that I want to mention about the above views. At the beggining of this script, it was show that the dataset has a lot of missing data. The missing 
@@ -228,3 +228,14 @@ END AS  AllMonthsAllYears
 FROM WithOut99
 GROUP BY Region, Country, State, City, Year, Month
 ORDER BY 2,3,4
+
+CREATE VIEW AvgTemperatureAllYears AS 
+WITH AvgByYear AS (
+    SELECT a.Region, a.Country, a.State, a.City, a.Year, a.Month,a.Day, a.AvgTemperature
+    FROM WithOut99 a 
+    RIGHT JOIN FullCountries b ON a.City = b.City  
+	WHERE a.Day !=29
+    GROUP BY a.Region, a.Country, a.State, a.City, a.Year, a.Month, a.Day, a.AvgTemperature
+) 
+SELECT *, ((AvgTemperature-32)*5)/9 AS AverageTemperaturebyMonthCelsius, CONVERT(DATE,CONCAT(CAST(Year as nvarchar(50)),'-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date
+FROM AvgByYear
