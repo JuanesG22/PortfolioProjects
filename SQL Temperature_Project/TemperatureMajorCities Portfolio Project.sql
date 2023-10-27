@@ -250,4 +250,8 @@ FROM AvgByYear
 
 --
 
+SELECT *
+FROM TemperatureMajorCities..city_temperature
+WHERE City = 'Buenos aires'
+
 
