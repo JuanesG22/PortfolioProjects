@@ -207,7 +207,13 @@ FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City
 WHERE a.Day !=29 
 GROUP BY a.Region, a.Country, a.State, a.City, a.Month, a.Day
 )
-SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius, CONVERT(DATE,CONCAT('2019-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date
+SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius, 
+CONVERT(DATE,CONCAT('2019-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date,
+CASE WHEN Month = 1 THEN 'January' WHEN Month = 2 THEN 'February' WHEN Month = 3 THEN 'March' WHEN Month = 4 THEN 'April'
+WHEN Month = 5 THEN 'May' WHEN Month = 6 THEN 'June' WHEN Month = 7 THEN 'July' WHEN Month = 8 THEN 'August'
+WHEN Month = 9 THEN 'September' WHEN Month = 10 THEN 'October' WHEN Month = 11 THEN 'November'
+ELSE 'December'
+END AS MonthAxis
 FROM MinMaxYearByDay
 
 -- There is something special that I want to mention about the above views. At the beggining of this script, it was show that the dataset has a lot of missing data. The missing 
