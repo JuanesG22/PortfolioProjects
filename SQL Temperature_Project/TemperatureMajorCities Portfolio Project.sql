@@ -200,14 +200,14 @@ FROM MinMaxYearByDay
 
 -- Creating View to store data for later visualizations 
 
-CREATE VIEW ExportingMinMaxYearByDay AS 
+CREATE VIEW MinMaxYearByDay AS 
 WITH MinMaxYearByDay AS (
 SELECT a.Region, a.Country, a.State, a.City, a.Month, a.Day, MIN(a.AvgTemperature) AS MinAvgTemperature, MAX(a.AvgTemperature) AS MaxAvgTemperature
 FROM WithOut99 a RIGHT JOIN FullCountries b ON a.City = b.City  
 WHERE a.Day !=29 
 GROUP BY a.Region, a.Country, a.State, a.City, a.Month, a.Day
 )
-SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius, CONVERT(DATE,CONCAT('2021-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date
+SELECT *, ((MinAvgTemperature-32)*5)/9 AS MinAvgTemperatureCelsius, ((MaxAvgTemperature-32)*5)/9 AS MaxAvgTemperatureCelsius, CONVERT(DATE,CONCAT('2019-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date
 FROM MinMaxYearByDay
 
 -- There is something special that I want to mention about the above views. At the beggining of this script, it was show that the dataset has a lot of missing data. The missing 
@@ -241,3 +241,7 @@ WITH AvgByYear AS (
 ) 
 SELECT *, ((AvgTemperature-32)*5)/9 AS AverageTemperaturebyMonthCelsius, CONVERT(DATE,CONCAT(CAST(Year as nvarchar(50)),'-',CAST(Month as nvarchar(50)),'-',CAST(Day as nvarchar(50)))) AS Date
 FROM AvgByYear
+
+--
+
+
